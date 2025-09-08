@@ -8,28 +8,32 @@ export default function Envelope({ position = [0, 0, 0], opened = false, onOpen 
   const flap = useRef()
   const [hovered, setHovered] = useState(false)
   const openAmt = useRef(0)
-  const letterY = useRef(-2) // start fully hidden below
+  const letterY = useRef(-0.6) // start tucked just inside the envelope
 
   const w = 3.2, h = 2.2, t = 0.08
 
   useFrame((state, delta) => {
     const target = opened ? 1 : 0
-    // spring-ish lerp
+    // smooth open
     openAmt.current += (target - openAmt.current) * Math.min(1, delta * 4)
-    // slide letter from -2 (hidden) to +1.0 (revealed)
-    const yTarget = opened ? 1.0 : -2
+    // slide letter: from -0.6 (inside) to +1.0 (out)
+    const yTarget = opened ? 1.0 : -0.6
     letterY.current += (yTarget - letterY.current) * Math.min(1, delta * 4)
 
-    // gentle hover motion
+    // gentle float
     if (group.current) {
       const ttime = state.clock.getElapsedTime()
       group.current.position.y = position[1] + Math.sin(ttime * 0.9) * 0.05
       group.current.rotation.z = Math.sin(ttime * 0.3) * 0.04
       group.current.rotation.x = Math.sin(ttime * 0.25) * 0.03
     }
-    // flap hinge
     if (flap.current) flap.current.rotation.x = -1.25 * openAmt.current
   })
+
+  // z-position logic:
+  // - When closed: put letter BEHIND envelope front (negative z), fully hidden.
+  // - When opened: bring it IN FRONT so it can be read.
+  const letterZ = opened ? t / 2 + 0.03 : -0.05
 
   return (
     <Float floatIntensity={0.6} speed={0.9} rotationIntensity={0.2}>
@@ -52,13 +56,13 @@ export default function Envelope({ position = [0, 0, 0], opened = false, onOpen 
           />
         </mesh>
 
-        {/* Front face */}
+        {/* Front face (slightly in front of the box) */}
         <mesh position={[0, 0, t / 2 + 0.02]}>
           <planeGeometry args={[w * 0.98, h * 0.98]} />
           <meshStandardMaterial color={'#fff7df'} roughness={0.9} />
         </mesh>
 
-        {/* Flap: simple plane hinged along top edge */}
+        {/* Flap: simple plane hinged along top */}
         <group position={[0, h / 2, t / 2 + 0.021]}>
           <mesh ref={flap} position={[0, -h * 0.45, 0]}>
             <planeGeometry args={[w, h * 0.9]} />
@@ -69,16 +73,9 @@ export default function Envelope({ position = [0, 0, 0], opened = false, onOpen 
         {/* Sparkle emphasis */}
         <Sparkles count={120} speed={0.5} opacity={0.95} size={3} scale={[3.6, 3.6, 3.6]} />
 
-        {/* Letter (slides up; slightly in front so it is readable when revealed) */}
-        <Letter y={letterY} z={t / 2 + 0.03} width={w * 0.9} height={h * 1.6} />
+        {/* Letter: z is behind when closed, in front when opened */}
+        <Letter y={letterY} z={letterZ} width={w * 0.9} height={h * 1.6} opened={opened} />
 
         {/* 3D hint */}
         {!opened && (
-          <Html center distanceFactor={10} position={[0, -h * 0.85, 0]}>
-            <div className="hint-3d">Click the envelope ✨</div>
-          </Html>
-        )}
-      </group>
-    </Float>
-  )
-}
+          <Html center distanceFactor={10} po
