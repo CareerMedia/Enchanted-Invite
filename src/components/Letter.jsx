@@ -1,20 +1,26 @@
 import React from 'react'
 import { Html } from '@react-three/drei'
 
-export default function Letter({ y, z = 0.02, width = 2.6, height = 3.2, opened = false }) {
+/**
+ * If you pass yValue, it uses that number directly.
+ * Otherwise, pass a ref via `y` with a `.current` number.
+ */
+export default function Letter({ y, yValue = 0, z = 0.02, width = 2.6, height = 3.2, opened = true }) {
+  const yPos = (y && typeof y.current === 'number') ? y.current : yValue
+
   return (
-    <group position={[0, y.current, z]}>
+    <group position={[0, yPos, z]}>
       {/* Parchment backing */}
       <mesh visible={opened}>
         <planeGeometry args={[width, height]} />
         <meshStandardMaterial color={'#f3ecd1'} roughness={0.75} />
       </mesh>
 
-      {/* Text content: smaller via distanceFactor and only visible when opened */}
+      {/* Text content: scaled via distanceFactor and only visible when opened */}
       <Html
         transform
         position={[0, 0, 0.001]}
-        distanceFactor={9.5}   // smaller so it never overwhelms the screen
+        distanceFactor={9.5}
         occlude={false}
         className="letter-html"
         style={{ visibility: opened ? 'visible' : 'hidden' }}
