@@ -1,97 +1,70 @@
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { Float, Html, Sparkles } from '@react-three/drei'
-import { Shape } from 'three'
 import { useFrame } from '@react-three/fiber'
-import * as easing from 'maath/easing'
 import Letter from './Letter.jsx'
 
 export default function Envelope({ position=[0,0,0], opened=false, onOpen }) {
   const group = useRef()
-  const flapPivot = useRef()
+  const flap = useRef()
   const [hovered, setHovered] = useState(false)
-  const localOpen = useRef(0) // 0 closed, 1 open
-  const letterY = useRef(-0.8)   // start hidden
+  const openAmt = useRef(0)
+  const letterY = useRef(-0.8)
 
-  const w = 3.2, h = 2.2, t = 0.05
-
-  // Triangle flap shape (hinge along its top edge)
-  const flapGeom = useMemo(() => {
-    const tri = new Shape()
-    tri.moveTo(-w/2, 0)
-    tri.lineTo(w/2, 0)
-    tri.lineTo(0, -h*0.9)
-    tri.lineTo(-w/2, 0)
-    return tri
-  }, [])
+  const w = 3.2, h = 2.2, t = 0.08
 
   useFrame((state, delta) => {
-    // Use the plain-number damp form (most robust in production)
     const target = opened ? 1 : 0
-    localOpen.current = easing.damp(localOpen.current, target, 0.25, delta)
+    openAmt.current += (target - openAmt.current) * Math.min(1, delta * 4)
+    letterY.current += (((opened ? 1.1 : -0.8) - letterY.current) * Math.min(1, delta * 4))
 
-    // flap rotation from 0 (closed) to -1.3 rad (open)
-    if (flapPivot.current) {
-      const rot = -1.3 * localOpen.current
-      flapPivot.current.rotation.x = rot
-    }
-
-    // Letter slides from hidden (-0.8) to visible (1.1)
-    const letterTarget = opened ? 1.1 : -0.8
-    letterY.current = easing.damp(letterY.current, letterTarget, 0.25, delta)
-
-    // Gentle envelope sway
     if (group.current) {
-      const t = state.clock.getElapsedTime()
-      group.current.rotation.z = Math.sin(t * 0.3) * 0.04
-      group.current.rotation.x = Math.sin(t * 0.25) * 0.03
+      const ttime = state.clock.getElapsedTime()
+      group.current.position.y = position[1] + Math.sin(ttime * 0.9) * 0.05
+      group.current.rotation.z = Math.sin(ttime * 0.3) * 0.04
+      group.current.rotation.x = Math.sin(ttime * 0.25) * 0.03
     }
+    if (flap.current) flap.current.rotation.x = -1.25 * openAmt.current
   })
 
   return (
-    <Float floatIntensity={0.7} speed={0.8} rotationIntensity={0.2}>
-      <group ref={group} position={position}
+    <Float floatIntensity={0.6} speed={0.9} rotationIntensity={0.2}>
+      <group
+        ref={group}
+        position={position}
         onPointerOver={(e) => (e.stopPropagation(), setHovered(true))}
-        onPointerOut={(e) => setHovered(false)}
-        onClick={(e) => { e.stopPropagation(); onOpen?.() }}
+        onPointerOut={() => setHovered(false)}
+        onClick={(e) => (e.stopPropagation(), onOpen?.())}
       >
-        {/* Envelope body (thin box) */}
+        {/* Body */}
         <mesh castShadow receiveShadow>
           <boxGeometry args={[w, h, t]} />
           <meshStandardMaterial
             color={hovered ? '#f2e9d0' : '#e8dcc2'}
-            roughness={0.8}
-            metalness={0}
-            emissive={'#332b1f'}
+            roughness={0.75}
+            emissive={'#221a10'}
             emissiveIntensity={0.05}
           />
         </mesh>
 
-        {/* Front face (subtle) */}
-        <mesh position={[0, 0, t/2 + 0.001]}>
+        {/* Front face */}
+        <mesh position={[0, 0, t/2 + 0.02]}>
           <planeGeometry args={[w*0.98, h*0.98]} />
-          <meshStandardMaterial color={'#f6efdb'} roughness={0.9} />
+          <meshStandardMaterial color={'#fff7df'} roughness={0.9} />
         </mesh>
 
-        {/* Flap group with hinge at top edge */}
-        <group ref={flapPivot} position={[0, h/2, t/2 + 0.002]}>
-          <mesh>
-            <shapeGeometry args={[flapGeom]} />
-            <meshStandardMaterial color={'#eadfca'} roughness={0.9} />
-          </mesh>
-          {/* Edge line for flap */}
-          <mesh rotation={[Math.PI/2, 0, 0]} position={[0, 0, 0.0005]}>
-            <planeGeometry args={[w, 0.01]} />
-            <meshBasicMaterial color={'#c7b89a'} />
+        {/* Flap as a simple plane (hinged) */}
+        <group position={[0, h/2, t/2 + 0.021]}>
+          <mesh ref={flap} position={[0, -h*0.45, 0]}>
+            <planeGeometry args={[w, h*0.9]} />
+            <meshStandardMaterial color={'#efdfc1'} roughness={0.9} />
           </mesh>
         </group>
 
-        {/* Magical sparkles around envelope */}
-        <Sparkles count={100} speed={0.4} opacity={0.85} size={2} scale={[3.5, 3.5, 3.5]} position={[0,0,0.2]} />
+        <Sparkles count={120} speed={0.5} opacity={0.95} size={3} scale={[3.6,3.6,3.6]} />
 
-        {/* Letter (slides upward) */}
-        <Letter y={letterY} z={t/2 + 0.004} width={w*0.9} height={h*1.6} />
+        {/* Letter */}
+        <Letter y={letterY} z={t/2 + 0.03} width={w*0.9} height={h*1.6} />
 
-        {/* 3D hint text (fallback to overlay) */}
         {!opened && (
           <Html center distanceFactor={10} position={[0, -h*0.85, 0]}>
             <div className="hint-3d">Click the envelope ✨</div>
