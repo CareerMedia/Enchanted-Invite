@@ -1,0 +1,29 @@
+{
+  "name": "enchanted-invite",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "three": "^0.160.0",
+    "@react-three/fiber": "^8.15.17",
+    "@react-three/drei": "^9.101.3",
+    "@react-three/postprocessing": "^2.15.13",
+    "postprocessing": "^6.35.3",
+    "tone": "^14.8.49",
+    "maath": "^0.10.7"
+  },
+  "devDependencies": {
+    "vite": "^5.4.9",
+    "@vitejs/plugin-react": "^4.3.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
