@@ -31,7 +31,7 @@ export default function Envelope({ position = [0, 0, 0], opened = false, onOpen 
   })
 
   // z-position logic:
-  // - When closed: put letter BEHIND envelope front (negative z), fully hidden.
+  // - When closed: put letter BEHIND envelope (negative z), fully hidden.
   // - When opened: bring it IN FRONT so it can be read.
   const letterZ = opened ? t / 2 + 0.03 : -0.05
 
@@ -78,4 +78,11 @@ export default function Envelope({ position = [0, 0, 0], opened = false, onOpen 
 
         {/* 3D hint */}
         {!opened && (
-          <Html center distanceFactor={10} po
+          <Html center distanceFactor={10} position={[0, -h * 0.85, 0]}>
+            <div className="hint-3d">Click the envelope ✨</div>
+          </Html>
+        )}
+      </group>
+    </Float>
+  )
+}
