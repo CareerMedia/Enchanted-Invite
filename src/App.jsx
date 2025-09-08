@@ -20,7 +20,7 @@ export default function App() {
         await startMagicMusic()
         setAudioReady(true)
       } catch {
-        /* will retry on next click */
+        /* try again on next click */
       }
     }
   }, [audioReady])
@@ -37,7 +37,7 @@ export default function App() {
     setMuted(next)
   }, [])
 
-  // Start audio on first user gesture anywhere on the page
+  // Start audio on first user gesture anywhere
   useEffect(() => {
     const h = () => { kickAudio() }
     document.addEventListener('pointerdown', h, { once: true, capture: true })
@@ -57,13 +57,44 @@ export default function App() {
           <Envelope position={[0, 0.5, 0]} onOpen={handleOpen} opened={false} />
         ) : (
           <>
-            {/* MANUAL SIZE: tweak scale and df to your taste */}
+            {/* Manual size controls: scale & df */}
             <Letter
               yValue={0.5}
               z={0.05}
               width={2.8}
               height={4.2}
               opened
-              scale={0.72}   // <— set your own value (e.g., 0.6 … 0.9)
-              df={10}        // <— higher = smaller Html content
+              scale={0.72}  // adjust this value to your taste (e.g. 0.6 .. 0.9)
+              df={10}       // higher = smaller Html content
             />
+            {burst && <SparkleBurst position={[0, 0.5, 0]} scale={[4, 4, 4]} />}
+          </>
+        )}
+
+        <OrbitControls enablePan={false} enableZoom={false} />
+      </Canvas>
+
+      {!opened && (
+        <div className="overlay-center">
+          <div className="prompt glow-pulse">Click the envelope</div>
+          <div className="hint">Best experienced with sound on 🔊</div>
+        </div>
+      )}
+
+      <div className="overlay-bottom">
+        <button className="ui-btn" onClick={handleToggleMute} aria-label={muted ? 'Unmute' : 'Mute'}>
+          {muted ? 'Unmute Music' : 'Mute Music'}
+        </button>
+        <a className="ui-btn secondary" href="https://github.com/new" target="_blank" rel="noreferrer">
+          Fork to GitHub
+        </a>
+      </div>
+
+      <div className="overlay-credits">
+        <small>
+          An original, immersive 3D invitation—no copyrighted assets used.
+        </small>
+      </div>
+    </div>
+  )
+}
