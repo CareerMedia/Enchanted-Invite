@@ -20,7 +20,7 @@ export default function Letter({ y, yValue = 0, z = 0.02, width = 2.6, height = 
       <Html
         transform
         position={[0, 0, 0.001]}
-        distanceFactor={90.5}
+        distanceFactor={1.5}
         occlude={false}
         className="letter-html"
         style={{ visibility: opened ? 'visible' : 'hidden' }}
