@@ -8,21 +8,26 @@ export default function Envelope({ position=[0,0,0], opened=false, onOpen }) {
   const flap = useRef()
   const [hovered, setHovered] = useState(false)
   const openAmt = useRef(0)
-  const letterY = useRef(-0.8)
+  const letterY = useRef(-2)   // ⬅️ fully hidden at start
 
   const w = 3.2, h = 2.2, t = 0.08
 
   useFrame((state, delta) => {
     const target = opened ? 1 : 0
+    // simple spring-ish lerp
     openAmt.current += (target - openAmt.current) * Math.min(1, delta * 4)
-    letterY.current += (((opened ? 1.1 : -0.8) - letterY.current) * Math.min(1, delta * 4))
+    // slide letter from -2 (hidden) to +1.0 (out)
+    const yTarget = opened ? 1.0 : -2
+    letterY.current += (yTarget - letterY.current) * Math.min(1, delta * 4)
 
+    // gentle hover motion
     if (group.current) {
       const ttime = state.clock.getElapsedTime()
       group.current.position.y = position[1] + Math.sin(ttime * 0.9) * 0.05
       group.current.rotation.z = Math.sin(ttime * 0.3) * 0.04
       group.current.rotation.x = Math.sin(ttime * 0.25) * 0.03
     }
+    // flap hinge
     if (flap.current) flap.current.rotation.x = -1.25 * openAmt.current
   })
 
@@ -35,14 +40,15 @@ export default function Envelope({ position=[0,0,0], opened=false, onOpen }) {
         onPointerOut={() => setHovered(false)}
         onClick={(e) => (e.stopPropagation(), onOpen?.())}
       >
-        {/* Body */}
+        {/* Envelope body */}
         <mesh castShadow receiveShadow>
           <boxGeometry args={[w, h, t]} />
           <meshStandardMaterial
-            color={hovered ? '#f2e9d0' : '#e8dcc2'}
-            roughness={0.75}
-            emissive={'#221a10'}
-            emissiveIntensity={0.05}
+            color={hovered ? '#f0e4c7' : '#e8dcc2'}
+            roughness={0.7}
+            metalness={0}
+            emissive={'#1f1710'}
+            emissiveIntensity={0.08}
           />
         </mesh>
 
@@ -52,7 +58,7 @@ export default function Envelope({ position=[0,0,0], opened=false, onOpen }) {
           <meshStandardMaterial color={'#fff7df'} roughness={0.9} />
         </mesh>
 
-        {/* Flap as a simple plane (hinged) */}
+        {/* Flap as a simple plane (hinged along top edge) */}
         <group position={[0, h/2, t/2 + 0.021]}>
           <mesh ref={flap} position={[0, -h*0.45, 0]}>
             <planeGeometry args={[w, h*0.9]} />
@@ -60,17 +66,7 @@ export default function Envelope({ position=[0,0,0], opened=false, onOpen }) {
           </mesh>
         </group>
 
+        {/* Sparkle emphasis */}
         <Sparkles count={120} speed={0.5} opacity={0.95} size={3} scale={[3.6,3.6,3.6]} />
 
-        {/* Letter */}
-        <Letter y={letterY} z={t/2 + 0.03} width={w*0.9} height={h*1.6} />
-
-        {!opened && (
-          <Html center distanceFactor={10} position={[0, -h*0.85, 0]}>
-            <div className="hint-3d">Click the envelope ✨</div>
-          </Html>
-        )}
-      </group>
-    </Float>
-  )
-}
+        {/* Letter (slides up; slightly in front so it’*
