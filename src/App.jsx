@@ -4,9 +4,17 @@ import { OrbitControls } from '@react-three/drei'
 import MagicScene from './components/MagicScene.jsx'
 import Envelope from './components/Envelope.jsx'
 import Wand from './components/Wand.jsx'
-// temporarily leave out Effects until we confirm envelope is visible
-// import Effects from './components/Effects.jsx'
 import { startMagicMusic, toggleMute } from './music.js'
+
+// Visible canary cube (leave it until you confirm the envelope shows)
+function DebugCube() {
+  return (
+    <mesh position={[0, 0, -2]}>
+      <boxGeometry args={[2, 2, 2]} />
+      <meshBasicMaterial color="hotpink" />
+    </mesh>
+  )
+}
 
 export default function App() {
   const moonRef = useRef()
@@ -33,7 +41,6 @@ export default function App() {
     setMuted(next)
   }, [])
 
-  // fallback: first click anywhere starts audio
   useEffect(() => {
     const h = () => { kickAudio() }
     document.addEventListener('pointerdown', h, { once: true, capture: true })
@@ -45,19 +52,17 @@ export default function App() {
       <Canvas
         style={{ position: 'absolute', inset: 0 }}
         dpr={[1, 2]}
-        camera={{ position: [0, 1.5, 6], fov: 50 }}
+        camera={{ position: [0, 1.2, 7], fov: 55 }}
       >
         <MagicScene moonRef={moonRef} />
-        <Envelope position={[0, 0.2, 0]} opened={opened} onOpen={handleOpen} />
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Wand key={i} index={i} total={5} radius={5} height={0.5} />
+        <Envelope position={[0, 0.5, 0]} opened={opened} onOpen={handleOpen} />
+        {Array.from({ length: 4 }).map((_, i) => (
+          <Wand key={i} index={i} total={4} radius={4.5} height={0.5} />
         ))}
-        {/* Uncomment once envelope is confirmed visible */}
-        {/* <Effects moonRef={moonRef} /> */}
+        <DebugCube />
         <OrbitControls enablePan={false} enableZoom={false} />
       </Canvas>
 
-      {/* Overlay UI */}
       {!opened && (
         <div className="overlay-center">
           <div className="prompt glow-pulse">Click the envelope</div>
@@ -74,7 +79,7 @@ export default function App() {
 
       <div className="overlay-credits">
         <small>
-          An original, immersive 3D invitation inspired by the playful magic vibe you know—no copyrighted assets used.
+          Original, immersive 3D invitation. No copyrighted assets used.
         </small>
       </div>
     </div>
