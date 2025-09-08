@@ -3,6 +3,5 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  // ensures relative asset paths so it works on GitHub Pages
-  base: './',
+  base: './', // <-- keep this
 })
