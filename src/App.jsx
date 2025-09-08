@@ -1,26 +1,16 @@
 import React, { useRef, useState, useCallback, useEffect } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { OrbitControls } from '@react-three/drei'
+import MagicScene from './components/MagicScene.jsx'
+import Envelope from './components/Envelope.jsx'
+import Wand from './components/Wand.jsx'
+// temporarily leave out Effects until we confirm envelope is visible
+// import Effects from './components/Effects.jsx'
 import { startMagicMusic, toggleMute } from './music.js'
 
-// TEMP: super-simple scene to prove render path
-function DebugScene() {
-  return (
-    <>
-      <color attach="background" args={['#070813']} />
-      <ambientLight intensity={0.8} />
-      <directionalLight position={[5, 8, 5]} intensity={1.2} />
-      {/* Big hotpink cube at the origin */}
-      <mesh position={[0, 0, 0]}>
-        <boxGeometry args={[2, 2, 2]} />
-        <meshBasicMaterial color="hotpink" />
-      </mesh>
-      <OrbitControls enablePan={false} />
-    </>
-  )
-}
-
 export default function App() {
+  const moonRef = useRef()
+  const [opened, setOpened] = useState(false)
   const [audioReady, setAudioReady] = useState(false)
   const [muted, setMuted] = useState(false)
 
@@ -33,10 +23,9 @@ export default function App() {
     }
   }, [audioReady])
 
-  useEffect(() => {
-    const h = () => { kickAudio() }
-    document.addEventListener('pointerdown', h, { once: true, capture: true })
-    return () => document.removeEventListener('pointerdown', h, { capture: true })
+  const handleOpen = useCallback(async () => {
+    setOpened(true)
+    await kickAudio()
   }, [kickAudio])
 
   const handleToggleMute = useCallback(() => {
@@ -44,22 +33,37 @@ export default function App() {
     setMuted(next)
   }, [])
 
+  // fallback: first click anywhere starts audio
+  useEffect(() => {
+    const h = () => { kickAudio() }
+    document.addEventListener('pointerdown', h, { once: true, capture: true })
+    return () => document.removeEventListener('pointerdown', h, { capture: true })
+  }, [kickAudio])
+
   return (
     <div className="app-root">
       <Canvas
-        // **Key: make the canvas actually cover the screen**
         style={{ position: 'absolute', inset: 0 }}
         dpr={[1, 2]}
         camera={{ position: [0, 1.5, 6], fov: 50 }}
       >
-        <DebugScene />
+        <MagicScene moonRef={moonRef} />
+        <Envelope position={[0, 0.2, 0]} opened={opened} onOpen={handleOpen} />
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Wand key={i} index={i} total={5} radius={5} height={0.5} />
+        ))}
+        {/* Uncomment once envelope is confirmed visible */}
+        {/* <Effects moonRef={moonRef} /> */}
+        <OrbitControls enablePan={false} enableZoom={false} />
       </Canvas>
 
-      {/* Overlay UI (unchanged) */}
-      <div className="overlay-center">
-        <div className="prompt glow-pulse">Click the envelope</div>
-        <div className="hint">Best experienced with sound on 🔊</div>
-      </div>
+      {/* Overlay UI */}
+      {!opened && (
+        <div className="overlay-center">
+          <div className="prompt glow-pulse">Click the envelope</div>
+          <div className="hint">Best experienced with sound on 🔊</div>
+        </div>
+      )}
 
       <div className="overlay-bottom">
         <button className="ui-btn" onClick={handleToggleMute} aria-label={muted ? 'Unmute' : 'Mute'}>
