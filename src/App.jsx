@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from 'react'
+import React, { useRef, useState, useCallback, useEffect } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { Html, OrbitControls } from '@react-three/drei'
 import MagicScene from './components/MagicScene.jsx'
@@ -13,22 +13,34 @@ export default function App() {
   const [audioReady, setAudioReady] = useState(false)
   const [muted, setMuted] = useState(false)
 
-  const handleOpen = useCallback(async () => {
-    setOpened(true)
+  const kickAudio = useCallback(async () => {
     if (!audioReady) {
       try {
         await startMagicMusic()
         setAudioReady(true)
       } catch (e) {
+        // Will try again on next click if needed
         console.warn('Audio could not start until user gesture', e)
       }
     }
   }, [audioReady])
 
+  const handleOpen = useCallback(async () => {
+    setOpened(true)
+    await kickAudio()
+  }, [kickAudio])
+
   const handleToggleMute = useCallback(() => {
     const next = toggleMute()
     setMuted(next)
   }, [])
+
+  // Fallback: start audio on first document click anywhere
+  useEffect(() => {
+    const handle = async () => { await kickAudio() }
+    document.addEventListener('pointerdown', handle, { once: true, capture: true })
+    return () => document.removeEventListener('pointerdown', handle, { capture: true })
+  }, [kickAudio])
 
   return (
     <div className="app-root">
