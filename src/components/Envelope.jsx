@@ -10,14 +10,13 @@ export default function Envelope({ position=[0,0,0], opened=false, onOpen }) {
   const flapPivot = useRef()
   const [hovered, setHovered] = useState(false)
   const localOpen = useRef(0) // 0 closed, 1 open
-  const letterY = useRef(0)   // slide progress for letter
+  const letterY = useRef(-0.8)   // start hidden
 
   const w = 3.2, h = 2.2, t = 0.05
 
   // Triangle flap shape (hinge along its top edge)
   const flapGeom = useMemo(() => {
     const tri = new Shape()
-    // top edge along y=0 from -w/2 to +w/2
     tri.moveTo(-w/2, 0)
     tri.lineTo(w/2, 0)
     tri.lineTo(0, -h*0.9)
@@ -26,16 +25,20 @@ export default function Envelope({ position=[0,0,0], opened=false, onOpen }) {
   }, [])
 
   useFrame((state, delta) => {
-    // Open progress target
+    // Use the plain-number damp form (most robust in production)
     const target = opened ? 1 : 0
-    localOpen.current = easing.damp(localOpen, 'current', target, 0.25, delta)
+    localOpen.current = easing.damp(localOpen.current, target, 0.25, delta)
+
     // flap rotation from 0 (closed) to -1.3 rad (open)
     if (flapPivot.current) {
       const rot = -1.3 * localOpen.current
       flapPivot.current.rotation.x = rot
     }
+
     // Letter slides from hidden (-0.8) to visible (1.1)
-    letterY.current = easing.damp(letterY, 'current', opened ? 1.1 : -0.8, 0.25, delta)
+    const letterTarget = opened ? 1.1 : -0.8
+    letterY.current = easing.damp(letterY.current, letterTarget, 0.25, delta)
+
     // Gentle envelope sway
     if (group.current) {
       const t = state.clock.getElapsedTime()
@@ -54,7 +57,13 @@ export default function Envelope({ position=[0,0,0], opened=false, onOpen }) {
         {/* Envelope body (thin box) */}
         <mesh castShadow receiveShadow>
           <boxGeometry args={[w, h, t]} />
-          <meshStandardMaterial color={hovered ? '#f2e9d0' : '#e8dcc2'} roughness={0.8} metalness={0} />
+          <meshStandardMaterial
+            color={hovered ? '#f2e9d0' : '#e8dcc2'}
+            roughness={0.8}
+            metalness={0}
+            emissive={'#332b1f'}
+            emissiveIntensity={0.05}
+          />
         </mesh>
 
         {/* Front face (subtle) */}
@@ -65,7 +74,7 @@ export default function Envelope({ position=[0,0,0], opened=false, onOpen }) {
 
         {/* Flap group with hinge at top edge */}
         <group ref={flapPivot} position={[0, h/2, t/2 + 0.002]}>
-          <mesh position={[0, 0, 0]}>
+          <mesh>
             <shapeGeometry args={[flapGeom]} />
             <meshStandardMaterial color={'#eadfca'} roughness={0.9} />
           </mesh>
