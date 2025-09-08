@@ -63,7 +63,7 @@ export default function Envelope({ position = [0, 0, 0], opened = false, onOpen 
         {/* 3D hint (overlay also exists) */}
         {!opened && (
           <Html center distanceFactor={10} position={[0, -h * 0.85, 0]}>
-            <div className="hint-3d">Click the envelope ✨</div>
+            <div className="hint-3d"></div>
           </Html>
         )}
       </group>
