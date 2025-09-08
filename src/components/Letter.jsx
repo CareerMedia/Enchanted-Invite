@@ -1,22 +1,23 @@
 import React from 'react'
 import { Html } from '@react-three/drei'
 
-export default function Letter({ y, z = 0.02, width = 2.6, height = 3.2 }) {
+export default function Letter({ y, z = 0.02, width = 2.6, height = 3.2, opened = false }) {
   return (
     <group position={[0, y.current, z]}>
-      {/* Parchment plane behind the HTML for depth */}
-      <mesh>
+      {/* Parchment backing */}
+      <mesh visible={opened}>
         <planeGeometry args={[width, height]} />
         <meshStandardMaterial color={'#f3ecd1'} roughness={0.75} />
       </mesh>
 
-      {/* Text content: smaller on screen via distanceFactor */}
+      {/* Text content: smaller via distanceFactor and only visible when opened */}
       <Html
         transform
         position={[0, 0, 0.001]}
         distanceFactor={9.5}   // smaller so it never overwhelms the screen
         occlude={false}
         className="letter-html"
+        style={{ visibility: opened ? 'visible' : 'hidden' }}
       >
         <div className="letter parchment">
           <h2>A Most Enchanting Summons</h2>
