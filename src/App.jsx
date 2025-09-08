@@ -5,31 +5,44 @@ import MagicScene from './components/MagicScene.jsx'
 import Envelope from './components/Envelope.jsx'
 import Letter from './components/Letter.jsx'
 import SparkleBurst from './components/SparkleBurst.jsx'
-// If you re-enable music later:
-// import { startMagicMusic, toggleMute } from './music.js'
+import { startMagicMusic, toggleMute } from './music.js'
 
 export default function App() {
   const moonRef = useRef()
   const [opened, setOpened] = useState(false)
   const [burst, setBurst] = useState(false)
-  // const [muted, setMuted] = useState(false)
-  // const [audioReady, setAudioReady] = useState(false)
+  const [audioReady, setAudioReady] = useState(false)
+  const [muted, setMuted] = useState(false)
+
+  const kickAudio = useCallback(async () => {
+    if (!audioReady) {
+      try {
+        await startMagicMusic()
+        setAudioReady(true)
+      } catch {
+        /* will retry on next click */
+      }
+    }
+  }, [audioReady])
 
   const handleOpen = useCallback(async () => {
-    // if (!audioReady) { try { await startMagicMusic(); setAudioReady(true) } catch {} }
+    await kickAudio()
     setOpened(true)
     setBurst(true)
-    setTimeout(() => setBurst(false), 1200) // sparkles fade after ~1.2s
+    setTimeout(() => setBurst(false), 1200)
+  }, [kickAudio])
+
+  const handleToggleMute = useCallback(() => {
+    const next = toggleMute()
+    setMuted(next)
   }, [])
 
-  // const handleToggleMute = useCallback(() => {
-  //   const next = toggleMute()
-  //   setMuted(next)
-  // }, [])
-
+  // Start audio on first user gesture anywhere on the page
   useEffect(() => {
-    // If you want audio to start on first click anywhere, you can add it back later.
-  }, [])
+    const h = () => { kickAudio() }
+    document.addEventListener('pointerdown', h, { once: true, capture: true })
+    return () => document.removeEventListener('pointerdown', h, { capture: true })
+  }, [kickAudio])
 
   return (
     <div className="app-root">
@@ -40,42 +53,17 @@ export default function App() {
       >
         <MagicScene moonRef={moonRef} />
 
-        {/* Before click: show envelope. After click: show letter. */}
         {!opened ? (
           <Envelope position={[0, 0.5, 0]} onOpen={handleOpen} opened={false} />
         ) : (
           <>
-            {/* A little forward so it sits in front of where the envelope was */}
-            <Letter yValue={0.5} z={0.05} width={2.8} height={4.2} opened />
-            {burst && <SparkleBurst position={[0, 0.5, 0]} scale={[4, 4, 4]} />}
-          </>
-        )}
-
-        <OrbitControls enablePan={false} enableZoom={false} />
-      </Canvas>
-
-      {/* Overlay UI */}
-      {!opened && (
-        <div className="overlay-center">
-          <div className="prompt glow-pulse">Click the envelope</div>
-          <div className="hint">Best experienced with sound on 🔊</div>
-        </div>
-      )}
-
-      <div className="overlay-bottom">
-        {/* Re-add when you re-enable music: 
-        <button className="ui-btn" onClick={handleToggleMute} aria-label={muted ? 'Unmute' : 'Mute'}>
-          {muted ? 'Unmute Music' : 'Mute Music'}
-        </button> 
-        */}
-        <a className="ui-btn secondary" href="https://github.com/new" target="_blank" rel="noreferrer">Fork to GitHub</a>
-      </div>
-
-      <div className="overlay-credits">
-        <small>
-          An original, immersive 3D invitation—no copyrighted assets used.
-        </small>
-      </div>
-    </div>
-  )
-}
+            {/* MANUAL SIZE: tweak scale and df to your taste */}
+            <Letter
+              yValue={0.5}
+              z={0.05}
+              width={2.8}
+              height={4.2}
+              opened
+              scale={0.72}   // <— set your own value (e.g., 0.6 … 0.9)
+              df={10}        // <— higher = smaller Html content
+            />
