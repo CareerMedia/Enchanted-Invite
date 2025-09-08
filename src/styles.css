@@ -15,14 +15,12 @@ body {
   overflow: hidden;
 }
 
-/* KEY: ensure the app container spans the screen and layers correctly */
 .app-root {
   position: relative;
   width: 100%;
   height: 100%;
 }
 
-/* Optional: ensure any canvas fills and sits behind overlays */
 .app-root canvas {
   display: block;
   position: absolute;
@@ -34,7 +32,7 @@ body {
 .overlay-bottom,
 .overlay-credits {
   position: absolute;
-  z-index: 10; /* above the canvas */
+  z-index: 10;
 }
 
 .overlay-center {
@@ -64,9 +62,7 @@ body {
 
 .hint { font-size: 14px; color: var(--muted); opacity: 0.9; }
 
-.overlay-bottom {
-  right: 16px; bottom: 16px; display: flex; gap: 8px;
-}
+.overlay-bottom { right: 16px; bottom: 16px; display: flex; gap: 8px; }
 
 .ui-btn {
   appearance: none;
@@ -85,11 +81,9 @@ body {
 .ui-btn:active { transform: translateY(0); }
 .ui-btn.secondary { opacity: .85; }
 
-.overlay-credits {
-  left: 16px; bottom: 16px; color: #94a3b8; font-size: 12px; opacity: 0.8; max-width: 320px;
-}
+.overlay-credits { left: 16px; bottom: 16px; color: #94a3b8; font-size: 12px; opacity: 0.8; max-width: 320px; }
 
-/* Letter styles (kept for later steps) */
+/* Letter styles */
 .letter-html { width: min(380px, 72vw); }
 .letter.parchment {
   color: #1b1320;
