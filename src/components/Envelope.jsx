@@ -3,20 +3,20 @@ import { Float, Html, Sparkles } from '@react-three/drei'
 import { useFrame } from '@react-three/fiber'
 import Letter from './Letter.jsx'
 
-export default function Envelope({ position=[0,0,0], opened=false, onOpen }) {
+export default function Envelope({ position = [0, 0, 0], opened = false, onOpen }) {
   const group = useRef()
   const flap = useRef()
   const [hovered, setHovered] = useState(false)
   const openAmt = useRef(0)
-  const letterY = useRef(-2)   // ⬅️ fully hidden at start
+  const letterY = useRef(-2) // start fully hidden below
 
   const w = 3.2, h = 2.2, t = 0.08
 
   useFrame((state, delta) => {
     const target = opened ? 1 : 0
-    // simple spring-ish lerp
+    // spring-ish lerp
     openAmt.current += (target - openAmt.current) * Math.min(1, delta * 4)
-    // slide letter from -2 (hidden) to +1.0 (out)
+    // slide letter from -2 (hidden) to +1.0 (revealed)
     const yTarget = opened ? 1.0 : -2
     letterY.current += (yTarget - letterY.current) * Math.min(1, delta * 4)
 
@@ -36,9 +36,9 @@ export default function Envelope({ position=[0,0,0], opened=false, onOpen }) {
       <group
         ref={group}
         position={position}
-        onPointerOver={(e) => (e.stopPropagation(), setHovered(true))}
+        onPointerOver={(e) => { e.stopPropagation(); setHovered(true) }}
         onPointerOut={() => setHovered(false)}
-        onClick={(e) => (e.stopPropagation(), onOpen?.())}
+        onClick={(e) => { e.stopPropagation(); onOpen?.() }}
       >
         {/* Envelope body */}
         <mesh castShadow receiveShadow>
@@ -53,20 +53,32 @@ export default function Envelope({ position=[0,0,0], opened=false, onOpen }) {
         </mesh>
 
         {/* Front face */}
-        <mesh position={[0, 0, t/2 + 0.02]}>
-          <planeGeometry args={[w*0.98, h*0.98]} />
+        <mesh position={[0, 0, t / 2 + 0.02]}>
+          <planeGeometry args={[w * 0.98, h * 0.98]} />
           <meshStandardMaterial color={'#fff7df'} roughness={0.9} />
         </mesh>
 
-        {/* Flap as a simple plane (hinged along top edge) */}
-        <group position={[0, h/2, t/2 + 0.021]}>
-          <mesh ref={flap} position={[0, -h*0.45, 0]}>
-            <planeGeometry args={[w, h*0.9]} />
+        {/* Flap: simple plane hinged along top edge */}
+        <group position={[0, h / 2, t / 2 + 0.021]}>
+          <mesh ref={flap} position={[0, -h * 0.45, 0]}>
+            <planeGeometry args={[w, h * 0.9]} />
             <meshStandardMaterial color={'#efdfc1'} roughness={0.9} />
           </mesh>
         </group>
 
         {/* Sparkle emphasis */}
-        <Sparkles count={120} speed={0.5} opacity={0.95} size={3} scale={[3.6,3.6,3.6]} />
+        <Sparkles count={120} speed={0.5} opacity={0.95} size={3} scale={[3.6, 3.6, 3.6]} />
 
-        {/* Letter (slides up; slightly in front so it’*
+        {/* Letter (slides up; slightly in front so it is readable when revealed) */}
+        <Letter y={letterY} z={t / 2 + 0.03} width={w * 0.9} height={h * 1.6} />
+
+        {/* 3D hint */}
+        {!opened && (
+          <Html center distanceFactor={10} position={[0, -h * 0.85, 0]}>
+            <div className="hint-3d">Click the envelope ✨</div>
+          </Html>
+        )}
+      </group>
+    </Float>
+  )
+}
